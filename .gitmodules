@@ -1,3 +1,0 @@
-[submodule "mkosi.profiles/rescue-stick/mkosi.extra/usr/share/skel-max/dotfiles"]
-	path = mkosi.profiles/rescue-stick/mkosi.extra/usr/share/skel-max/dotfiles
-	url = git@git.moehl.eu:dotfiles.git
