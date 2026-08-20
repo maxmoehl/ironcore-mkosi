@@ -1,11 +1,8 @@
 [Unit]
 Description=IronCore libvirt-provider
 Documentation=https://github.com/ironcore-dev/libvirt-provider
-Wants=network-online.target
-After=network-online.target
-Requires=libvirtd.socket
-After=libvirtd.socket
-After=cloud-final.service
+Wants=network-online.target cloud-init.target
+After=network-online.target cloud-init.target
 AssertPathExists=/var/cfg/classes/supported-machine-classes.yaml
 
 [Service]
@@ -30,4 +27,4 @@ ExecStart=/usr/local/bin/libvirt-provider \
 Restart=on-failure
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=hypervisor.target

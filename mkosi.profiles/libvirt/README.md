@@ -52,13 +52,25 @@ interface plugin, which execs `inisix` per machine interface):
   `/var/lib/libvirt-provider`, created via tmpfiles.d). It uses the
   socket-activated libvirtd (`Requires=libvirtd.socket`), hugepages and the
   writeback volume cache policy like the DaemonSet.
-- `machinepoollet.service` starts after the provider and talks to it via
-  `/var/run/libvirt-provider/libvirt-provider.sock`. It bootstraps/rotates its kubeconfig
+- `machinepoollet.service` talks to the provider via
+  `/var/run/libvirt-provider/libvirt-provider.sock`. It is not pulled in by
+  the boot target directly: `machinepoollet.path` watches the provider
+  socket and starts the poollet only once it exists, so the poollet
+  doesn't crash-loop (and hit the systemd start limit) while the provider
+  is still setting up. It bootstraps/rotates its kubeconfig
   client cert from `/etc/bootstrap-kubeconfig-machinepool/bootstrap-kubeconfig`.
   Machine pool name and provider-id are the hostname (%H, which cloud-init
   sets from the metaldata server-name); the topology region/zone are
   injected via cloud-init as a drop-in at
   `/etc/systemd/system/machinepoollet.service.d/`.
+
+`libvirt-provider.service` and `machinepoollet.path` are hooked into
+`hypervisor.target` (shipped by this profile, modeled after
+`graphical.target`: `Requires=`/`After=multi-user.target`,
+`AllowIsolate=yes`) instead of `multi-user.target` directly, and
+`default.target` points at it. This keeps `multi-user.target` free of
+units that order against `cloud-init.target`, breaking the boot ordering
+loop between cloud-init and multi-user.
 
 ### Provisioning via cloud-init
 

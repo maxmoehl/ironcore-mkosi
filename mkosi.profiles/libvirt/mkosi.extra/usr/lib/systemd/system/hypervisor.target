@@ -1,0 +1,5 @@
+[Unit]
+Description=Hypervisor
+Requires=multi-user.target
+Conflicts=rescue.service rescue.target
+After=multi-user.target rescue.service rescue.target

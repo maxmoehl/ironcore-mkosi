@@ -1,9 +1,8 @@
 [Unit]
 Description=IronCore machinepoollet
-Wants=network-online.target
-After=network-online.target
+Wants=network-online.target cloud-init.target
+After=network-online.target cloud-init.target
 After=libvirt-provider.service
-After=cloud-final.service
 AssertPathExists=/etc/bootstrap-kubeconfig-machinepool/bootstrap-kubeconfig
 
 [Service]
@@ -32,5 +31,6 @@ ExecStart=/usr/local/bin/machinepoollet \
     --nic-downward-api-label=root-nic-uid="metadata.labels['downward-api.machinepoollet.ironcore.dev/root-nic-uid']"
 Restart=on-failure
 
-[Install]
-WantedBy=multi-user.target
+# No [Install] section on purpose: machinepoollet.service is activated by
+# machinepoollet.path once the libvirt-provider socket exists, not pulled
+# in by the default target directly.
