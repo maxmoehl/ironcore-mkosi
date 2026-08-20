@@ -1,0 +1,8 @@
+[Match]
+Name=isx-*
+
+[Network]
+IPv6SendRA=yes
+
+[IPv6SendRA]
+Managed=yes

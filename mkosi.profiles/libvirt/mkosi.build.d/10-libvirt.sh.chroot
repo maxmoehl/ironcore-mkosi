@@ -1,7 +1,4 @@
 #!/bin/sh
-# Builds the libvirt-provider and the ironcore machinepoollet from the
-# git submodules in src/ and installs them into the image at
-# /usr/local/bin.
 set -e
 
 export GOTOOLCHAIN=auto
@@ -34,3 +31,6 @@ cd "$SRCDIR/src/inisix"
 go build -trimpath \
     -o "$DESTDIR/usr/local/bin/inisix" \
     ./cmd/inisix
+go build -trimpath \
+    -o "$DESTDIR/usr/local/bin/inisixd" \
+    ./cmd/inisixd

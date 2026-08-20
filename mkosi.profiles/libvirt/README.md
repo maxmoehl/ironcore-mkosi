@@ -9,6 +9,7 @@ installs them to `/usr/local/bin`, together with systemd units:
 | `libvirt-provider`   | `src/libvirt-provider` ([ironcore-dev/libvirt-provider])  |
 | `machinepoollet`     | `src/ironcore` ([ironcore-dev/ironcore], `poollet/machinepoollet`) |
 | `inisix`             | `src/inisix` (reference INI plugin, used via the provider's `ini` network interface plugin) |
+| `inisixd`            | `src/inisix` (DHCPv6 server for inisix taps)                          |
 
 The binaries are static (pure Go), the build uses the distro's Go and
 automatically fetches the newer toolchain required by the projects'
@@ -43,8 +44,18 @@ interface plugin, which execs `inisix` per machine interface):
   `init-inisix.service` derives the base prefix from the metaldata
   "prefix" key (assuming a /64: `<prefix>:1::/80` as base, one /96 per
   NIC, i.e. 65536 interfaces) and is ordered before
-  `libvirt-provider.service` and `machinepoollet.service` (store at
-  `/var/inisix/prefix-store` is pre-created via tmpfiles.d).
+  `inisixd.service`, `libvirt-provider.service` and
+  `machinepoollet.service` (store at `/var/inisix/prefix-store` is
+  pre-created via tmpfiles.d).
+
+- `inisixd.service` runs the DHCPv6 server for inisix taps: it watches
+  rtnetlink and serves stateful DHCPv6 on every `isx-*` tap from the
+  prefix store, so it is ordered `After=init-inisix.service` (the store
+  init) and `libvirt-provider.service` is ordered `After=inisixd.service`,
+  keeping guests from attaching before DHCPv6 is up. The
+  `50-inisix.network` networkd file matches `isx-*` and enables IPv6 RA
+  with the managed flag so guests use DHCPv6. Runs persistently
+  (`Restart=on-failure`, `WantedBy=hypervisor.target`).
 
 - `libvirt-provider.service` runs as the `libvirt-provider` user (created
   via sysusers.d, uid 65532; member of `libvirt`, while `libvirt-qemu` is

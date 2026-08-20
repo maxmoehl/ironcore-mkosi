@@ -3,6 +3,7 @@ Description=IronCore libvirt-provider
 Documentation=https://github.com/ironcore-dev/libvirt-provider
 Wants=network-online.target cloud-init.target
 After=network-online.target cloud-init.target
+After=inisixd.service
 AssertPathExists=/var/cfg/classes/supported-machine-classes.yaml
 
 [Service]
