@@ -11,6 +11,12 @@
         "architectures": ["amd64", "arm64"],
         "profiles": ["default-user"]
     },
+    "libvirt": {
+        "distros": ["debian"],
+        "platform": "metal",
+        "architectures": ["amd64"],
+        "profiles": ["disk-install", "cloud-init", "frr", "libvirt"]
+    },
     "factorio": {
         "distros": ["debian"],
         "platform": "virt",

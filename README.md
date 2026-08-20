@@ -33,5 +33,6 @@ is the raw disk.
 | `cloud-init`   | Provisions via cloud-init user-data fetched from metaldata |
 | `factorio`     | Installs the Factorio server.                              |
 | `teamspeak`    | Installs the TeamSpeak3 server.                            |
+| `libvirt`      | Builds the ironcore libvirt-provider + machinepoollet.     |
 
 See the readme of each profile for more details.

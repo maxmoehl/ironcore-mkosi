@@ -1,0 +1,36 @@
+#!/bin/sh
+# Builds the libvirt-provider and the ironcore machinepoollet from the
+# git submodules in src/ and installs them into the image at
+# /usr/local/bin.
+set -e
+
+export GOTOOLCHAIN=auto
+export GOPATH="$BUILDDIR/go/path"
+export GOCACHE="$BUILDDIR/go/buildcache"
+export GOMODCACHE="$BUILDDIR/go/modcache"
+export CGO_ENABLED=0
+
+for repo in libvirt-provider ironcore inisix; do
+    if [ ! -f "$SRCDIR/src/$repo/go.mod" ]; then
+        echo "error: src/$repo is not checked out, run:" >&2
+        echo "    git submodule update --init src/$repo" >&2
+        exit 1
+    fi
+done
+
+mkdir -p "$DESTDIR/usr/local/bin"
+
+cd "$SRCDIR/src/libvirt-provider"
+go build -trimpath \
+    -o "$DESTDIR/usr/local/bin/libvirt-provider" \
+    ./cmd/libvirt-provider
+
+cd "$SRCDIR/src/ironcore"
+go build -trimpath \
+    -o "$DESTDIR/usr/local/bin/machinepoollet" \
+    ./poollet/machinepoollet/cmd/machinepoollet
+
+cd "$SRCDIR/src/inisix"
+go build -trimpath \
+    -o "$DESTDIR/usr/local/bin/inisix" \
+    ./cmd/inisix

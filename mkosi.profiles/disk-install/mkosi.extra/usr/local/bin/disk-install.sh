@@ -81,8 +81,12 @@ echo "uninitialized" > "/mnt/etc/machine-id"
 # Reset on-disk to be a regular bootable system.
 rm -f "/mnt/etc/initrd-release"
 
+# Carry over the running cmdline (console, hugepages, ...) and add the
+# root argument. This file is the single source of truth: the kexec below
+# appends it verbatim and it is picked up for the BLS entries of kernels
+# installed later (90-loaderentry reads /etc/kernel/cmdline).
 mkdir -p "/mnt/etc/kernel"
-echo "root=LABEL=ROOT console=tty0" > "/mnt/etc/kernel/cmdline"
+printf '%s root=LABEL=ROOT\n' "$(cat /proc/cmdline)" > "/mnt/etc/kernel/cmdline"
 
 # --- Install bootloader ---
 
@@ -99,5 +103,5 @@ chroot "/mnt" update-initramfs -c -k "${kver}"
 # --- Execute the kernel from disk ---
 kexec -l "/mnt/boot/vmlinuz-${kver}" \
     --initrd="/mnt/boot/initrd.img-${kver}" \
-    --append="root=LABEL=ROOT console=tty0"
+    --append="$(cat /mnt/etc/kernel/cmdline)"
 kexec -e

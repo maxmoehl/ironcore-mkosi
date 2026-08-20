@@ -1,0 +1,12 @@
+[Unit]
+Description=Render FRR config from the metaldata service
+Wants=systemd-networkd-wait-online.service
+After=systemd-networkd-wait-online.service
+ConditionFirstBoot=yes
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/configure-frr.sh
+
+[Install]
+WantedBy=network-online.target

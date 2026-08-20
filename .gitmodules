@@ -1,0 +1,9 @@
+[submodule "src/libvirt-provider"]
+	path = src/libvirt-provider
+	url = http://git.moehl.eu/ironcore/libvirt-provider.git
+[submodule "src/ironcore"]
+	path = src/ironcore
+	url = http://git.moehl.eu/ironcore/ironcore.git
+[submodule "src/inisix"]
+	path = src/inisix
+	url = http://git.moehl.eu/ironcore/inisix.git

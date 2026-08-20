@@ -1,0 +1,33 @@
+[Unit]
+Description=IronCore libvirt-provider
+Documentation=https://github.com/ironcore-dev/libvirt-provider
+Wants=network-online.target
+After=network-online.target
+Requires=libvirtd.socket
+After=libvirtd.socket
+After=cloud-final.service
+AssertPathExists=/var/cfg/classes/supported-machine-classes.yaml
+
+[Service]
+User=libvirt-provider
+Group=libvirt-provider
+SupplementaryGroups=libvirt
+AmbientCapabilities=CAP_NET_ADMIN
+RuntimeDirectory=libvirt-provider
+ExecStart=/usr/local/bin/libvirt-provider \
+    --address=/var/run/libvirt-provider/libvirt-provider.sock \
+    --libvirt-provider-dir=/var/lib/libvirt-provider \
+    --libvirt-socket=/var/run/libvirt/libvirt-sock \
+    --libvirt-uri=qemu:///system \
+    --supported-machine-classes=/var/cfg/classes/supported-machine-classes.yaml \
+    --network-interface-plugin-name=ini \
+    --ini-plugin-path=/usr/local/bin/inisix \
+    --gc-resync-interval=5s \
+    --gc-vm-graceful-shutdown-timeout=0 \
+    --enable-hugepages=true \
+    --volume-cache-policy=writeback \
+    --zap-log-level=3
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

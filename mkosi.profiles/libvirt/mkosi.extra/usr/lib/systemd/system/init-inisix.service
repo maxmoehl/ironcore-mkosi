@@ -1,0 +1,14 @@
+[Unit]
+Description=Initialize the inisix prefix store from metaldata
+Wants=network-online.target
+After=network-online.target
+Before=libvirt-provider.service machinepoollet.service
+
+[Service]
+Type=oneshot
+User=libvirt-provider
+Group=libvirt-provider
+ExecStart=/usr/local/bin/init-inisix.sh
+
+[Install]
+WantedBy=multi-user.target
