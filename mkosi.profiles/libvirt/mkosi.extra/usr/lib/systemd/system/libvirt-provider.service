@@ -12,6 +12,7 @@ Group=libvirt-provider
 SupplementaryGroups=libvirt
 AmbientCapabilities=CAP_NET_ADMIN
 RuntimeDirectory=libvirt-provider
+Environment=INISIX_MODE=tap
 ExecStart=/usr/local/bin/libvirt-provider \
     --address=/var/run/libvirt-provider/libvirt-provider.sock \
     --libvirt-provider-dir=/var/lib/libvirt-provider \

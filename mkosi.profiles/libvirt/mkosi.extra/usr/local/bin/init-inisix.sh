@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Provisions the inisix prefix store (INI.md §6) via the one-time
-# 'inisix init <base-prefix> <prefix-size>', from the node prefix of the
+# 'inisix init prefix <base-prefix> <prefix-size>', from the node prefix of the
 # metaldata service (same contract as configure-frr.sh):
 #
 # The metaldata "prefix" (the node's VM address space, announced to the
@@ -12,7 +12,7 @@ set -Eeuo pipefail
 # inisix init is NOT idempotent: it overwrites prefixes.json, wiping the
 # allocation state of running VMs — never re-init an existing store (also
 # protects against manual 'systemctl start init-inisix' re-runs).
-if [ -e /var/inisix/prefix-store/prefixes.json ]; then
+if [ -e /var/inisix/prefixes.json ]; then
     exit 0
 fi
 
@@ -37,4 +37,4 @@ fi
 BASE_PREFIX="${PREFIX%%/*}"
 BASE_PREFIX="${BASE_PREFIX%::}:1::/80"
 
-/usr/local/bin/inisix init "$BASE_PREFIX" 96
+/usr/local/bin/inisix init prefix "$BASE_PREFIX" 96

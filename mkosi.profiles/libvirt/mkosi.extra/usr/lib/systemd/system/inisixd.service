@@ -1,11 +1,11 @@
 [Unit]
 Description=IronCore inisix daemon (DHCPv6 server for inisix taps)
-# Serves prefixes from the inisix prefix store, hence starts only after the
-# oneshot store init. libvirt-provider.service in turn orders After= this
-# unit so guests never attach before DHCPv6 is up.
 After=init-inisix.service
 
 [Service]
+User=libvirt-provider
+Group=libvirt-provider
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_NET_RAW
 ExecStart=/usr/local/bin/inisixd
 Restart=on-failure
 

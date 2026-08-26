@@ -40,13 +40,14 @@ interface plugin, which execs `inisix` per machine interface):
 - `libvirt-provider.service` has `AmbientCapabilities=CAP_NET_ADMIN` so
   the plugin's inisix invocations survive the exec with the cap needed
   for tap/address/route setup. inisix needs its prefix store provisioned
-  once via `inisix init <base-prefix> <prefix-size>`:
+  once via `inisix init prefix <base-prefix> <prefix-size>`:
   `init-inisix.service` derives the base prefix from the metaldata
   "prefix" key (assuming a /64: `<prefix>:1::/80` as base, one /96 per
   NIC, i.e. 65536 interfaces) and is ordered before
   `inisixd.service`, `libvirt-provider.service` and
-  `machinepoollet.service` (store at `/var/inisix/prefix-store` is
-  pre-created via tmpfiles.d).
+  `machinepoollet.service` (the store is the file
+  `/var/inisix/prefixes.json` — its lock is an flock on the file itself —
+  in `/var/inisix`, which is pre-created via tmpfiles.d).
 
 - `inisixd.service` runs the DHCPv6 server for inisix taps: it watches
   rtnetlink and serves stateful DHCPv6 on every `isx-*` tap from the
@@ -55,7 +56,13 @@ interface plugin, which execs `inisix` per machine interface):
   keeping guests from attaching before DHCPv6 is up. The
   `50-inisix.network` networkd file matches `isx-*` and enables IPv6 RA
   with the managed flag so guests use DHCPv6. Runs persistently
-  (`Restart=on-failure`, `WantedBy=hypervisor.target`).
+  (`Restart=on-failure`, `WantedBy=hypervisor.target`) as the
+  `libvirt-provider` user with `AmbientCapabilities=CAP_NET_ADMIN
+  CAP_NET_BIND_SERVICE CAP_NET_RAW` (rtnetlink tap watch, DHCPv6 port
+  547, SO_BINDTODEVICE) — never root, so the prefix store lock is always
+  owned by the same user as the provider's inisix invocations (a
+  root-owned lock would lock them out; `inisix init` saves lock-free and
+  never creates it).
 
 - `libvirt-provider.service` runs as the `libvirt-provider` user (created
   via sysusers.d, uid 65532; member of `libvirt`, while `libvirt-qemu` is
