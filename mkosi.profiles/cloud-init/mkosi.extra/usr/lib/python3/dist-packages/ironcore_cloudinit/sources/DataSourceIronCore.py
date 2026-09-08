@@ -14,12 +14,21 @@
 # cloud-init's network boot stage, once systemd-networkd has brought up
 # DHCP, like the metadata-service datasources of the larger clouds.
 #
-# The URL can be overridden for development/testing (e.g. to point at a
-# mock service on a QEMU host) via cloud.cfg.d:
+# The metaldata URL carries no default: it comes from the `ic.metaldata=`
+# kernel cmdline parameter (metal images bake the production URL in; the
+# last occurrence wins, so appending another one overrides without
+# rebuilding):
+#
+#   ic.metaldata=http://10.0.2.2:8080/v1/
+#
+# A lower-precedence fallback is cloud.cfg.d:
 #
 #   datasource:
 #     IronCore:
 #       metadata_url: "http://10.0.2.2:8080/v1/"
+#
+# Without any configured URL the datasource declines to claim the machine
+# (cloud-init falls through to the next datasource in the list).
 
 import json
 import logging
@@ -28,8 +37,13 @@ from cloudinit import sources, url_helper, util
 
 LOG = logging.getLogger(__name__)
 
-METADATA_URL = "http://metaldata.ironcore.dev/v1/"
 HEADERS = {"Metadata-Flavor": "IronCore Metal"}
+
+# Kernel cmdline parameter carrying the metaldata URL. Nothing else claims
+# the ic. namespace (kernel, systemd, dracut, cloud-init), and the kernel
+# does not export dotted key=value params into PID 1's environment, so the
+# token stays visible via /proc/cmdline only.
+CMDLINE_URL_PREFIX = "ic.metaldata="
 
 # Well-known SMBIOS "no real UUID" values.
 _BOGUS_UUIDS = frozenset(
@@ -66,14 +80,25 @@ def _instance_id():
     return "iid-ironcore"
 
 
+def _metadata_url(sys_cfg):
+    url = util.get_cfg_by_path(
+        sys_cfg, ("datasource", "IronCore", "metadata_url")
+    )
+    for tok in util.get_cmdline().split():
+        if tok.startswith(CMDLINE_URL_PREFIX):
+            url = tok[len(CMDLINE_URL_PREFIX):]  # last one wins
+    return url
+
+
 class DataSourceIronCore(sources.DataSource):
     dsname = "IronCore"
 
     def _get_data(self):
-        url = util.get_cfg_by_path(
-            self.sys_cfg, ("datasource", "IronCore", "metadata_url"),
-            METADATA_URL,
-        )
+        url = _metadata_url(self.sys_cfg)
+        if not url:
+            LOG.debug("no metaldata URL configured, skipping")
+            return False
+        LOG.debug("fetching metaldata from %s", url)
         try:
             response = url_helper.readurl(
                 url, headers=HEADERS, timeout=5, retries=3

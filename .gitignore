@@ -1,4 +1,7 @@
 *.swp
-# local dev credentials for `mkosi ssh`
+__pycache__
+
+# local configuration / data
 /mkosi.key
 /mkosi.crt
+/mkosi.local.conf
