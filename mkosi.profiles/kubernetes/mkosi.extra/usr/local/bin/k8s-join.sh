@@ -3,9 +3,9 @@
 # k8s-join.sh — join this machine as an additional node (typically a stacked
 # control-plane node) of a cluster bootstrapped with k8s-init.sh.
 #
-# Everything kubeadm needs is baked into this image (packages, containerd,
-# pre-pulled images including FeCNI), so this works without internet access
-# or a metadata service.
+# kubeadm, kubelet, containerd and the FeCNI DaemonSet manifest are baked
+# into this image; no metadata service is required. Cluster images are pulled
+# from registry.k8s.io / ghcr.io at bootstrap, so the node needs egress.
 #
 set -euo pipefail
 

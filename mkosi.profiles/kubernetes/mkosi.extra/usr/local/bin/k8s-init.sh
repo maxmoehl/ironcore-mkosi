@@ -3,9 +3,10 @@
 # k8s-init.sh — initialize the first control-plane node of a kubeadm cluster
 # with FeCNI networking (IPv6-only, no overlays).
 #
-# Everything kubeadm needs is baked into this image (packages, containerd,
-# pre-pulled images including FeCNI), so this works without internet access
-# or a metadata service. Join further nodes with k8s-join.sh.
+# kubeadm, kubelet, containerd and the FeCNI DaemonSet manifest are baked
+# into this image; no metadata service is required. Cluster images are pulled
+# from registry.k8s.io / ghcr.io at bootstrap, so the node needs egress.
+# Join further nodes with k8s-join.sh.
 #
 set -euo pipefail
 

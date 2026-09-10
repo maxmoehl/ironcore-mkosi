@@ -1,10 +1,11 @@
 ## kubernetes
 
-Self-contained kubeadm node image for IPv6-only clusters with
-[FeCNI](../../../src/FeCNI) networking, built for environments **without a
-metadata service** (no cloud-init/user-data needed). The image contains
-everything required to bootstrap a cluster; on each node a single command is
-enough.
+kubeadm node image for IPv6-only clusters with [FeCNI](../../../src/FeCNI)
+networking, built for environments **without a metadata service** (no
+cloud-init/user-data needed). The image contains everything except the
+cluster images themselves — kubeadm and the applied manifests pull those at
+bootstrap (nodes need egress to registry.k8s.io and ghcr.io during
+`init`/`join`) — so all it takes on each node is a single command.
 
 Built to be combined with `virt` and `default-user`:
 
@@ -21,16 +22,11 @@ bin/build kubernetes
 * `kubelet`, `kubeadm`, `kubectl`, `cri-tools` from
   [pkgs.k8s.io](https://pkgs.k8s.io) (one repo per minor; the minor is set via
   `KUBERNETES_MINOR` in `mkosi.prepare.chroot`), held via `apt-mark hold`.
-* **All cluster images pre-pulled** into containerd's `k8s.io` namespace during
-  the build: the full `kubeadm config images pull` set (apiserver,
-  controller-manager, scheduler, proxy, etcd, coredns, pause) and the FeCNI
-  image, so `kubeadm init`/`join` run with zero internet egress on the nodes.
-* The **FeCNI image** `ghcr.io/mkalcok/fecni:latest`, pulled from GHCR at build
-  time, plus a hand-maintained copy of the DaemonSet manifest at
-  `mkosi.extra/opt/kubernetes/fecni.yaml` (→ `/opt/kubernetes/fecni.yaml`) with
-  the image tag replaced to match, and `imagePullPolicy: IfNotPresent` so
-  nodes use the pre-pulled copy instead of hitting the registry (`:latest`
-  would default to `Always`).
+* A hand-maintained copy of the **FeCNI DaemonSet manifest** at
+  `mkosi.extra/opt/kubernetes/fecni.yaml` (→ `/opt/kubernetes/fecni.yaml`),
+  pulling `ghcr.io/mkalcok/fecni:latest` — plus `imagePullPolicy: IfNotPresent`
+  on all containers, because `:latest` would default to `Always` (every pod
+  start would then contact GHCR and inherit whatever `latest` happens to be).
 * Two helpers:
   * `k8s-init.sh` — run on the first control-plane node
   * `k8s-join.sh` — run on every further node
@@ -98,12 +94,10 @@ phase upload-certs --upload-certs` on the first node mints a fresh one.
   runs, the node name is derived from it.
 * kubelet is enabled and crash-loops until `init`/`join` — normal kubeadm
   behavior.
-* Building requires network access (normal for this repo); the pulled images
-  land inside the node image, deployment afterwards is offline.
-* Bumping versions: `KUBERNETES_MINOR` for kubeadm & friends; for FeCNI
-  replace `FECNI_IMAGE` in `mkosi.prepare.chroot` *and* the tag in
-  `mkosi.extra/opt/kubernetes/fecni.yaml` (they must match). Consider pinning
-  the manifest to an immutable tag/digest once FeCNI releases stabilize.
+* Bumping versions: `KUBERNETES_MINOR` in `mkosi.prepare.chroot` for kubeadm
+  & friends; for FeCNI change the image tag in
+  `mkosi.extra/opt/kubernetes/fecni.yaml`. Consider pinning the manifest to an
+  immutable tag/digest once FeCNI releases stabilize.
 * The built image contains the cluster toolchain frozen at build time;
   bumping `KUBERNETES_MINOR` + rebuilding is the upgrade path for the *image*.
   In-band upgrades of a running cluster (`kubeadm upgrade`, apt) work as usual.
