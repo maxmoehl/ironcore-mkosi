@@ -7,3 +7,6 @@
 [submodule "src/inisix"]
 	path = src/inisix
 	url = http://git.moehl.eu/ironcore/inisix.git
+[submodule "src/FeCNI"]
+	path = src/FeCNI
+	url = https://github.tools.sap/I775095/FeCNI.git

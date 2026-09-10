@@ -1,0 +1,131 @@
+#!/bin/bash
+#
+# Prepare script for the kubernetes profile. Runs inside the image with
+# network access. Installs kubeadm, kubelet, kubectl and cri-tools from
+# pkgs.k8s.io, configures containerd for Kubernetes and pre-pulls everything
+# needed to bootstrap a cluster without internet access or a metadata
+# service:
+#
+#   - the kubeadm image set (kube-apiserver, -controller-manager, -scheduler,
+#     kube-proxy, etcd, coredns, pause)
+#   - the FeCNI image from ghcr.io
+#
+# All images end up in the k8s.io namespace of the containerd state inside
+# the image, which is exactly where the kubelet looks for them on first boot.
+# The matching DaemonSet manifest tags are baked in via the profile's
+# mkosi.extra tree, and the nodes never need egress again.
+
+set -euo pipefail
+
+if [ "${1:-}" != "final" ]; then
+    exit 0
+fi
+
+# The kubeadm minor release to install; pkgs.k8s.io has one repo per minor.
+KUBERNETES_MINOR=v1.37
+# Must match the image tag in mkosi.extra/opt/kubernetes/fecni.yaml.
+FECNI_IMAGE=ghcr.io/mkalcok/fecni:latest
+
+info() {
+    echo
+    echo "=== kubernetes profile: $*"
+}
+
+# ---------------------------------------------------------------------------
+# kubeadm, kubelet, kubectl from the community repository (pkgs.k8s.io)
+# ---------------------------------------------------------------------------
+info "installing kubernetes ${KUBERNETES_MINOR} packages"
+
+install -d -m 755 /etc/apt/keyrings
+curl -fsSL "https://pkgs.k8s.io/core:/stable:/${KUBERNETES_MINOR}/deb/Release.key" \
+    -o /etc/apt/keyrings/kubernetes.asc
+cat > /etc/apt/sources.list.d/kubernetes.list <<-EOF
+	deb [signed-by=/etc/apt/keyrings/kubernetes.asc] https://pkgs.k8s.io/core:/stable:/${KUBERNETES_MINOR}/deb/ /
+EOF
+
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get install --yes --no-install-recommends kubelet kubeadm kubectl cri-tools
+apt-mark hold kubelet kubeadm kubectl cri-tools
+
+# TODO: probably not needed.
+# systemctl enable kubelet.service containerd.service
+
+KUBERNETES_VERSION=$(kubeadm version -o short)
+
+# ---------------------------------------------------------------------------
+# containerd configuration
+#
+# Debian's stock config disables the CRI plugin, replace it. The cgroup
+# driver must match the kubelet (systemd). sandbox_image is pinned to the
+# pause image of the installed kubeadm version so pod sandboxes work without
+# registry access: containerd would otherwise default to an older pause tag.
+# ---------------------------------------------------------------------------
+PAUSE_IMAGE=$(kubeadm config images list --kubernetes-version "$KUBERNETES_VERSION" | grep '/pause:' | head -n1)
+[ -n "$PAUSE_IMAGE" ] || { echo "error: failed to determine pause image" >&2; exit 1; }
+
+mkdir -p /etc/containerd
+cat > /etc/containerd/config.toml <<-EOF
+	# Written by the kubernetes mkosi profile, replacing the Debian default
+	# (which disables the CRI plugin). sandbox_image matches the pause image
+	# pulled by kubeadm below so that sandboxes start offline.
+	version = 2
+
+	[plugins."io.containerd.grpc.v1.cri"]
+	  sandbox_image = "${PAUSE_IMAGE}"
+
+	[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+	  runtime_type = "io.containerd.runc.v2"
+
+	  [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+	    SystemdCgroup = true
+EOF
+
+# ---------------------------------------------------------------------------
+# Pre-pull all cluster images
+#
+# containerd is not running inside the build chroot, so start a private
+# instance against the image's own state directory. Everything it pulls is
+# part of the final image and the cluster bootstrap works without egress.
+# ---------------------------------------------------------------------------
+info "pre-pulling images for ${KUBERNETES_VERSION} + ${FECNI_IMAGE}"
+
+cleanup_containerd() {
+    if [ -n "${CONTAINERD_PID:-}" ]; then
+        kill "$CONTAINERD_PID" 2>/dev/null || true
+        wait "$CONTAINERD_PID" 2>/dev/null || true
+        CONTAINERD_PID=
+    fi
+    rm -rf /run/containerd
+}
+trap cleanup_containerd EXIT
+trap 'exit 1' INT TERM
+
+mkdir -p /run/containerd
+containerd >/tmp/containerd-pre-pull.log 2>&1 &
+CONTAINERD_PID=$!
+
+for _ in $(seq 1 30); do
+    [ -S /run/containerd/containerd.sock ] && break
+    sleep 1
+done
+ctr -n k8s.io version >/dev/null
+
+kubeadm config images pull \
+    --cri-socket unix:///run/containerd/containerd.sock \
+    --kubernetes-version "$KUBERNETES_VERSION"
+
+ctr -n k8s.io images pull "$FECNI_IMAGE"
+
+ctr -n k8s.io images ls
+ctr -n k8s.io images ls | grep -q " $FECNI_IMAGE " || {
+    echo "error: ${FECNI_IMAGE} failed to import" >&2
+    cat /tmp/containerd-pre-pull.log >&2
+    exit 1
+}
+
+cleanup_containerd
+trap - EXIT INT TERM
+rm -f /tmp/containerd-pre-pull.log
+
+info "done: image is a self-contained kubeadm node (init: k8s-init.sh, join: k8s-join.sh)"

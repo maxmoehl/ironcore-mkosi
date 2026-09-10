@@ -34,5 +34,6 @@ is the raw disk.
 | `factorio`     | Installs the Factorio server.                              |
 | `teamspeak`    | Installs the TeamSpeak3 server.                            |
 | `libvirt`      | Builds the ironcore libvirt-provider + machinepoollet.     |
+| `kubernetes`   | Self-contained kubeadm node (IPv6, FeCNI), no metadata service needed. |
 
 See the readme of each profile for more details.

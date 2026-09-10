@@ -28,5 +28,11 @@
         "platform": "virt",
         "architectures": ["amd64"],
         "profiles": ["default-user", "teamspeak"]
+    },
+    "kubernetes": {
+        "distros": ["debian"],
+        "platform": "virt",
+        "architectures": ["amd64", "arm64"],
+        "profiles": ["default-user", "kubernetes"]
     }
 }

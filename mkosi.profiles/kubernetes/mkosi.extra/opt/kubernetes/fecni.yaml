@@ -1,0 +1,122 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fecni
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: fecni
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["nodes/status"]
+    verbs: ["patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: fecni
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: fecni
+subjects:
+  - kind: ServiceAccount
+    name: fecni
+    namespace: kube-system
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fecni
+  namespace: kube-system
+  labels:
+    app: fecni
+spec:
+  selector:
+    matchLabels:
+      app: fecni
+  template:
+    metadata:
+      labels:
+        app: fecni
+    spec:
+      serviceAccountName: fecni
+      hostNetwork: true
+      tolerations:
+        - operator: Exists
+      priorityClassName: system-node-critical
+      initContainers:
+        - name: install-cni
+          image: ghcr.io/mkalcok/fecni:latest
+          imagePullPolicy: IfNotPresent
+          command: ["cp", "/fecni", "/host/opt/cni/bin/fecni"]
+          volumeMounts:
+            - name: cni-bin
+              mountPath: /host/opt/cni/bin
+        - name: configure-cni
+          image: ghcr.io/mkalcok/fecni:latest
+          imagePullPolicy: IfNotPresent
+          command: ["/fecni-init"]
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: cni-conf
+              mountPath: /host/etc/cni/net.d
+            - name: cni-conflist-template
+              mountPath: /template
+      containers:
+        - name: fecni
+          image: ghcr.io/mkalcok/fecni:latest
+          imagePullPolicy: IfNotPresent
+          command: ["sleep", "infinity"]
+          volumeMounts:
+            - name: cni-bin
+              mountPath: /opt/cni/bin
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+          securityContext:
+            privileged: true
+      volumes:
+        - name: cni-bin
+          hostPath:
+            path: /opt/cni/bin
+            type: DirectoryOrCreate
+        - name: cni-conf
+          hostPath:
+            path: /etc/cni/net.d
+            type: DirectoryOrCreate
+        - name: cni-conflist-template
+          configMap:
+            name: fecni-conflist-template
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fecni-conflist-template
+  namespace: kube-system
+data:
+  fecni.conflist: |
+    {
+      "cniVersion": "1.1.0",
+      "name": "fecni",
+      "plugins": [
+        {
+          "type": "fecni",
+          "subnet": "__PODCIDR_SUBNET__"
+        }
+      ]
+    }
