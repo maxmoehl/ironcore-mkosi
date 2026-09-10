@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -ex
+
+# Overwrite the `uninitialized` from the base configuration to ensure the live
+# boot does not have first-boot semantics and first-boot units only fire when
+# the system boots from disk after the installation.
+: > /etc/machine-id
