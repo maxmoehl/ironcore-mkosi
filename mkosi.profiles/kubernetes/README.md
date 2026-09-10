@@ -17,11 +17,21 @@ bin/build kubernetes
 
 ### What's in the image
 
-* `containerd` (from Debian, CRI enabled, `SystemdCgroup=true`, `sandbox_image`
-  pinned to the matching pause image) plus `containernetworking-plugins`.
+* `containerd` (from Debian) plus `containernetworking-plugins`, with the
+  config shipped via `mkosi.extra/etc/containerd/config.toml`: CRI enabled
+  (Debian's stock config disables it), `SystemdCgroup=true` to match the
+  kubelet, `sandbox_image` set to the pause tag of the installed k8s minor
+  (containerd would otherwise default to an older pause than kubeadm pulls).
 * `kubelet`, `kubeadm`, `kubectl`, `cri-tools` from
-  [pkgs.k8s.io](https://pkgs.k8s.io) (one repo per minor; the minor is set via
-  `KUBERNETES_MINOR` in `mkosi.prepare.chroot`), held via `apt-mark hold`.
+  [pkgs.k8s.io](https://pkgs.k8s.io) (one repo per minor), installed through
+  mkosi's regular `Packages=` mechanism. The
+  third-party apt repo is provided the mkosi way: `mkosi.sandbox/
+  etc/apt/{sources.list.d,keyrings}` is consulted when mkosi invokes apt
+  during the build (a `mkosi.skeleton/` tree would *not* work — mkosi runs
+  apt outside the image, so in-image apt config is ignored), and the same two
+  files are shipped via `mkosi.extra/` so the repo remains usable inside the
+  image for in-cluster upgrades. To bump the kubernetes minor, edit the URL
+  in both `kubernetes.list` copies.
 * A hand-maintained copy of the **FeCNI DaemonSet manifest** at
   `mkosi.extra/opt/kubernetes/fecni.yaml` (→ `/opt/kubernetes/fecni.yaml`),
   pulling `ghcr.io/mkalcok/fecni:latest` — plus `imagePullPolicy: IfNotPresent`
@@ -94,10 +104,13 @@ phase upload-certs --upload-certs` on the first node mints a fresh one.
   runs, the node name is derived from it.
 * kubelet is enabled and crash-loops until `init`/`join` — normal kubeadm
   behavior.
-* Bumping versions: `KUBERNETES_MINOR` in `mkosi.prepare.chroot` for kubeadm
-  & friends; for FeCNI change the image tag in
-  `mkosi.extra/opt/kubernetes/fecni.yaml`. Consider pinning the manifest to an
-  immutable tag/digest once FeCNI releases stabilize.
+* Bumping versions: the k8s minor is the URL in the two
+  `kubernetes.list` copies (`mkosi.sandbox/` + `mkosi.extra/`) plus the
+  `sandbox_image` pause tag in `mkosi.extra/etc/containerd/config.toml`
+  (check `PauseVersion` in `cmd/kubeadm/app/constants/constants.go` of the
+  k8s `release-1.xx` branch); for FeCNI change the image tag in
+  `mkosi.extra/opt/kubernetes/fecni.yaml`. Consider pinning the manifest to
+  an immutable tag/digest once FeCNI releases stabilize.
 * The built image contains the cluster toolchain frozen at build time;
   bumping `KUBERNETES_MINOR` + rebuilding is the upgrade path for the *image*.
   In-band upgrades of a running cluster (`kubeadm upgrade`, apt) work as usual.

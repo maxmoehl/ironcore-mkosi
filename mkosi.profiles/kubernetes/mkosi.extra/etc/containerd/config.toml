@@ -1,0 +1,17 @@
+# Replaces Debian's stock /etc/containerd/config.toml (which disables the CRI
+# plugin). The systemd cgroup driver matches the kubelet configuration.
+# sandbox_image is the pause image used for pod sandboxes; it is pinned to
+# the version of the k8s minor release installed from the repo in
+# mkosi.sandbox (for v1.37 kubeadm uses pause 3.10.2, see
+# PauseVersion in cmd/kubeadm/app/constants/constants.go). Bump it when
+# bumping the kubernetes repo URL.
+version = 2
+
+[plugins."io.containerd.grpc.v1.cri"]
+  sandbox_image = "registry.k8s.io/pause:3.10.2"
+
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+  runtime_type = "io.containerd.runc.v2"
+
+  [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+    SystemdCgroup = true
