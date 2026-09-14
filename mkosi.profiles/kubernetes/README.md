@@ -37,6 +37,12 @@ bin/build kubernetes
   pulling `ghcr.io/mkalcok/fecni:latest` — plus `imagePullPolicy: IfNotPresent`
   on all containers, because `:latest` would default to `Always` (every pod
   start would then contact GHCR and inherit whatever `latest` happens to be).
+* The **FeCNI plugin binary** itself, built from `src/FeCNI` at image-build
+  time (`mkosi.build.d/10-fecni.sh.chroot`, same pattern as the libvirt
+  profile) and shipped in the standard CNI directory `/opt/cni/bin/fecni`.
+  Requires the `src/FeCNI` submodule at build time (`git submodule update
+  --init src/FeCNI`). The DaemonSet's `install-cni` init container still
+  copies the binary from its container image over it when it runs.
 * Two helpers:
   * `k8s-init.sh` — run on the first control-plane node
   * `k8s-join.sh` — run on every further node
@@ -108,7 +114,7 @@ phase upload-certs --upload-certs` on the first node mints a fresh one.
   `kubernetes.list` copies (`mkosi.sandbox/` + `mkosi.extra/`) plus the
   `sandbox_image` pause tag in `mkosi.extra/etc/containerd/config.toml`
   (check `PauseVersion` in `cmd/kubeadm/app/constants/constants.go` of the
-  k8s `release-1.xx` branch); for FeCNI change the image tag in
+  k8s `release-1.xx` branch); for FeCNI update the `src/FeCNI` submodule and change the image tag in
   `mkosi.extra/opt/kubernetes/fecni.yaml`. Consider pinning the manifest to
   an immutable tag/digest once FeCNI releases stabilize.
 * The built image contains the cluster toolchain frozen at build time;

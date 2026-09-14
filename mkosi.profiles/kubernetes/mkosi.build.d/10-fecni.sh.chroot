@@ -1,0 +1,21 @@
+#!/bin/sh
+set -e
+
+export GOTOOLCHAIN=auto
+export GOPATH="$BUILDDIR/go/path"
+export GOCACHE="$BUILDDIR/go/buildcache"
+export GOMODCACHE="$BUILDDIR/go/modcache"
+export CGO_ENABLED=0
+
+if [ ! -f "$SRCDIR/src/FeCNI/go.mod" ]; then
+    echo "error: src/FeCNI is not checked out, run:" >&2
+    echo "    git submodule update --init src/FeCNI" >&2
+    exit 1
+fi
+
+mkdir -p "$DESTDIR/opt/cni/bin"
+
+cd "$SRCDIR/src/FeCNI"
+go build -trimpath \
+    -o "$DESTDIR/opt/cni/bin/fecni" \
+    ./cmd/fecni

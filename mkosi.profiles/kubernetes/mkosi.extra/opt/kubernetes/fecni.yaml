@@ -111,7 +111,7 @@ metadata:
 data:
   fecni.conflist: |
     {
-      "cniVersion": "1.1.0",
+      "cniVersion": "1.0.0",
       "name": "fecni",
       "plugins": [
         {
