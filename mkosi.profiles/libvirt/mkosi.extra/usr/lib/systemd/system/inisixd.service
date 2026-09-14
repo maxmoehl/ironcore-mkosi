@@ -6,7 +6,9 @@ After=init-inisix.service
 User=libvirt-provider
 Group=libvirt-provider
 AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_NET_RAW
-ExecStart=/usr/local/bin/inisixd
+ExecStart=/usr/local/bin/inisixd \
+    -dns-server 2001:4860:4860::6464 \
+    -dns-server 2001:4860:4860::64
 Restart=on-failure
 
 [Install]
