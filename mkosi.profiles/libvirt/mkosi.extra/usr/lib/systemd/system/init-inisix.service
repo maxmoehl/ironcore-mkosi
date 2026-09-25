@@ -1,14 +1,17 @@
 [Unit]
-Description=Initialize the inisix prefix store from metaldata
-Wants=network-online.target
-After=network-online.target
+Description=Initialize the inisix prefix store
+AssertPathExists=/var/lib/inisix/init.env
+ConditionPathExists=!/var/lib/inisix/prefixes.json
+Wants=cloud-init.target
+After=cloud-init.target
 Before=libvirt-provider.service machinepoollet.service
 
 [Service]
 Type=oneshot
 User=libvirt-provider
 Group=libvirt-provider
-ExecStart=/usr/local/bin/init-inisix.sh
+EnvironmentFile=/var/lib/inisix/init.env
+ExecStart=/usr/local/bin/inisix init prefix ${BASE_PREFIX} ${PREFIX_SIZE}
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=hypervisor.target

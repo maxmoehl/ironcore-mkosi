@@ -1,16 +1,12 @@
 [Unit]
 Description=IronCore machinepoollet
-Wants=network-online.target cloud-init.target
-After=network-online.target cloud-init.target
-After=libvirt-provider.service
-AssertPathExists=/etc/bootstrap-kubeconfig-machinepool/bootstrap-kubeconfig
+Wants=cloud-init.target
+After=cloud-init.target libvirt-provider.service
+AssertPathExists=/var/lib/machinepoollet/bootstrap-kubeconfig
+AssertPathExists=/var/lib/machinepoollet/env
 
 [Service]
-# TODO: machinepoollet tries to load the leader election kubeconfig
-# unconditionally, even if it doesn't need it. We point it at the bootstrap
-# config to satisfy that requirement as it won't start otherwise. This should be
-# fixed so that disabled leader election doesn't even try to load the
-# configuraiton.
+EnvironmentFile=/var/lib/machinepoollet/env
 ExecStart=/usr/local/bin/machinepoollet \
     --health-probe-bind-address=[::1]:8081 \
     --metrics-bind-address=[::1]:8080 \
@@ -18,8 +14,7 @@ ExecStart=/usr/local/bin/machinepoollet \
     --provider-id=libvirt-provider://%H \
     --machine-runtime-endpoint=unix:/var/run/libvirt-provider/libvirt-provider.sock \
     --kubeconfig=/var/lib/machinepoollet/kubeconfig \
-    --bootstrap-kubeconfig=/etc/bootstrap-kubeconfig-machinepool/bootstrap-kubeconfig \
-    --leader-election-kubeconfig=/etc/bootstrap-kubeconfig-machinepool/bootstrap-kubeconfig \
+    --bootstrap-kubeconfig=/var/lib/machinepoollet/bootstrap-kubeconfig \
     --rotate-certificates \
     --topology-region-label=${TOPOLOGY_REGION} \
     --topology-zone-label=${TOPOLOGY_ZONE} \
