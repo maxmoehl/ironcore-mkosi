@@ -1,0 +1,30 @@
+#!/bin/sh
+set -eux
+
+# Both hypervisor implementations are installed as selectable alternatives.
+# Cloud-init (or an operator) explicitly enables one of them after writing its
+# configuration; neither one should start merely because this is the default
+# hypervisor target.
+systemctl disable --now \
+    libvirt-provider.service \
+    machinepoollet.path \
+    cloud-hypervisor-provider.service \
+    machinepoollet-cloud-hypervisor.path 2>/dev/null || true
+
+if [ -f /home/ubuntu/.ssh/authorized_keys ]; then
+    useradd --create-home --user-group --shell /bin/bash ubuntu 2>/dev/null || true
+    chown -R ubuntu:ubuntu /home/ubuntu
+    chmod 0700 /home/ubuntu/.ssh
+    chmod 0600 /home/ubuntu/.ssh/authorized_keys
+fi
+
+chmod 0755 \
+    /usr/local/bin/cloud-hypervisor-provider \
+    /usr/local/bin/irictl-machine \
+    /usr/local/bin/machinepoollet \
+    /usr/local/bin/cloud-hypervisor \
+    /usr/local/libexec/cloud-hypervisor-provider/validate-host
+chmod 0644 \
+    /usr/local/bin/CLOUDHV_EFI.fd \
+    /etc/cloud-hypervisor-provider/provider.env \
+    /etc/cloud-hypervisor-provider/machinepoollet.env.example

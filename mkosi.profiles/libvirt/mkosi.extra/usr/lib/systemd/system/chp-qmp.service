@@ -1,0 +1,17 @@
+[Unit]
+Description=Cloud Hypervisor Provider QMP monitor
+Wants=cloud-init.target
+After=cloud-init.target systemd-tmpfiles-setup.service
+
+[Service]
+Type=simple
+User=chp
+Group=chp
+ExecStart=/usr/bin/qemu-storage-daemon \
+  --chardev socket,id=qmpsock,path=/run/chp/qmp/sock,server=on,wait=off \
+  --monitor chardev=qmpsock
+Restart=on-failure
+RestartSec=1
+
+[Install]
+WantedBy=hypervisor.target

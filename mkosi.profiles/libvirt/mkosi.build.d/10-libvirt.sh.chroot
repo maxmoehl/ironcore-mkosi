@@ -7,7 +7,7 @@ export GOCACHE="$BUILDDIR/go/buildcache"
 export GOMODCACHE="$BUILDDIR/go/modcache"
 export CGO_ENABLED=0
 
-for repo in libvirt-provider ironcore inisix; do
+for repo in libvirt-provider ironcore inisix cloud-hypervisor-provider; do
     if [ ! -f "$SRCDIR/src/$repo/go.mod" ]; then
         echo "error: src/$repo is not checked out, run:" >&2
         echo "    git submodule update --init src/$repo" >&2
@@ -26,6 +26,14 @@ cd "$SRCDIR/src/ironcore"
 go build -trimpath \
     -o "$DESTDIR/usr/local/bin/machinepoollet" \
     ./poollet/machinepoollet/cmd/machinepoollet
+go build -trimpath \
+    -o "$DESTDIR/usr/local/bin/irictl-machine" \
+    ./irictl-machine/cmd/irictl-machine
+
+cd "$SRCDIR/src/cloud-hypervisor-provider"
+go build -trimpath \
+    -o "$DESTDIR/usr/local/bin/cloud-hypervisor-provider" \
+    ./cmd/cloud-hypervisor-provider/main.go
 
 cd "$SRCDIR/src/inisix"
 go build -trimpath \

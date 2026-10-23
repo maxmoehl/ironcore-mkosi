@@ -1,0 +1,12 @@
+[Unit]
+Description=Load KVM kernel modules for Cloud Hypervisor
+Before=cloud-hypervisor-provider.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'modprobe kvm || true; modprobe kvm_intel || modprobe kvm_amd || modprobe kvm_arm || true'
+ExecStartPost=/bin/sh -c 'test -e /dev/kvm'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=hypervisor.target
