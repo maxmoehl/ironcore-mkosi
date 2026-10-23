@@ -1,0 +1,9 @@
+[Unit]
+Description=Wait for the Cloud Hypervisor provider socket before starting machinepoollet
+
+[Path]
+PathExists=/run/chp/iri-machinebroker.sock
+Unit=machinepoollet-cloud-hypervisor.service
+
+[Install]
+WantedBy=hypervisor.target

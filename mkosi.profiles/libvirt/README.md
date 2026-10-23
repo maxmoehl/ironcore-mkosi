@@ -31,6 +31,12 @@ in it's plugin concept.
 **machinepoollet**: Upstream version extended with patches to IRI to support
 reporting back the prefix allocated for a given network interface.
 
+The profile also ships the Cloud Hypervisor provider and its machinepoollet
+path, but neither provider is enabled by default. Enable either
+`libvirt-provider.service`/`machinepoollet.path` or
+`cloud-hypervisor-provider.service`/`machinepoollet-cloud-hypervisor.path`
+from cloud-init after writing the corresponding configuration files.
+
 ## Dependencies
 
 The profile requires the following files to be provided via a bootstrapping
