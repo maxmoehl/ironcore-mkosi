@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+
+CH_RELEASE_REPO=${CH_RELEASE_REPO:-ironcore-dev/cloud-hypervisor-provider}
+CH_RELEASE_TAG=${CH_RELEASE_TAG:-cloud-hypervisor-fw_cfg}
+EDK2_FW_TAG=${EDK2_FW_TAG:-ch-97eeb7b09}
+CH_URL=${CH_URL:-https://github.com/${CH_RELEASE_REPO}/releases/download/${CH_RELEASE_TAG}/cloud-hypervisor-static}
+FW_URL=${FW_URL:-https://github.com/cloud-hypervisor/edk2/releases/download/${EDK2_FW_TAG}/CLOUDHV.fd}
+
+mkdir -p "$DESTDIR/usr/local/bin"
+curl -fL --retry 3 "$CH_URL" -o "$DESTDIR/usr/local/bin/cloud-hypervisor"
+curl -fL --retry 3 "$FW_URL" -o "$DESTDIR/usr/local/bin/CLOUDHV_EFI.fd"
+chmod 0755 "$DESTDIR/usr/local/bin/cloud-hypervisor"
+chmod 0644 "$DESTDIR/usr/local/bin/CLOUDHV_EFI.fd"

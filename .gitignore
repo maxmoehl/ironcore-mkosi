@@ -5,3 +5,4 @@ __pycache__
 /mkosi.key
 /mkosi.crt
 /mkosi.local.conf
+.idea/

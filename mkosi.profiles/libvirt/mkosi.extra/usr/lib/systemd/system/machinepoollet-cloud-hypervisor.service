@@ -1,0 +1,24 @@
+[Unit]
+Description=IronCore machinepoollet for Cloud Hypervisor
+Wants=cloud-init.target
+After=cloud-init.target cloud-hypervisor-provider.service
+AssertPathExists=/etc/cloud-hypervisor-provider/bootstrap-kubeconfig
+AssertPathExists=/etc/cloud-hypervisor-provider/machinepoollet.env
+
+[Service]
+EnvironmentFile=/etc/cloud-hypervisor-provider/machinepoollet.env
+ExecStart=/usr/local/bin/machinepoollet \
+    --health-probe-bind-address=${MACHINEPOOLLET_ADDRESS}:8081 \
+    --metrics-bind-address=${MACHINEPOOLLET_ADDRESS}:8080 \
+    --machine-pool-name=${MACHINE_POOL_NAME} \
+    --provider-id=${PROVIDER_ID} \
+    --machine-runtime-endpoint=unix:///run/chp/iri-machinebroker.sock \
+    --kubeconfig=/etc/cloud-hypervisor-provider/kubeconfig \
+    --bootstrap-kubeconfig=/etc/cloud-hypervisor-provider/bootstrap-kubeconfig \
+    --rotate-certificates \
+    --leader-election-kubeconfig=/etc/cloud-hypervisor-provider/kubeconfig \
+    --addresses-ip-override=${MACHINEPOOLLET_IP}
+Restart=on-failure
+
+# No [Install] section: the path unit starts this service after the provider
+# socket exists. Enable machinepoollet-cloud-hypervisor.path to select CHP.

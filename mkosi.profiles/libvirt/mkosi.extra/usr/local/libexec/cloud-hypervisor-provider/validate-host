@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+
+test -e /dev/kvm
+test -x /usr/local/bin/cloud-hypervisor
+test -f /usr/local/bin/CLOUDHV_EFI.fd
