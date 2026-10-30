@@ -1,23 +1,25 @@
 # Debian OS Images via mkosi
 
 Debian (trixie) images built with [mkosi](https://github.com/systemd/mkosi),
-for both bare-metal deployments via UKI or VM deployments via raw disks.
+for both bare-metal deployments via UKI or VM deployments via RAW disk images.
 
 ## Building
 
 Host dependencies: `mkosi`
 
-Profiles are combined to produce the desired image variant. A platform profile
-(`metal` or `virt`) is always required:
+A convencience script for producing IronCore bootable bare-metal or VM images is
+provided in `bin/build`:
 
 ```
-mkosi -p metal,users,frr build
-mkosi -p virt,jool build
-mkosi -p metal,disk-install build
+usage: bin/build [ -a ARCHITECTURE ] [ -d DISTRO ] [ -p ] FLAVOR [ -- MKOSI_ARGS... ]
 ```
 
-Output is placed in `mkosi.output/`, the UKI is the `.efi` file, the `.raw` file
-is the raw disk.
+It understands the flavors specified in `flavors.json` which are combinations of
+profiles which should yield a functional system. It also handles some of the
+quirks of mkosi around cleaning up previous builds of a specific image.
+
+To build custom images, mkosi can also be invoked directly, see it's
+documentation for details.
 
 ## Profiles
 
