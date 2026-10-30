@@ -3,20 +3,12 @@ set -euo pipefail
 
 # --- Target disk selection ---
 
-# WARNING: make sure you don't have a virtual media mounted via the BMC as that
-# will appear as the first device.
-target=""
-for disk in /dev/disk/by-path/pci-*; do
-    [ -e "${disk}" ] || continue
-    resolved=$(readlink -f "${disk}")
-    devtype=$(lsblk -dn -o TYPE "${resolved}")
-    [ "${devtype}" = "disk" ] || continue
-    target="${resolved}"
-    break
-done
+target="$(for d in /sys/block/nvme*; do
+    printf '%s %s\n' "$(readlink -f $d/device | awk -F/ '{print $(NF-2)}')" "$(basename "$d")"
+done | sort | head -n1 | awk '{print "/dev/" $2}')"
 
 if [ -z "${target}" ]; then
-    echo "error: no disk found under /dev/disk/by-path/pci-*" >&2
+    echo "error: no NVMe disk found" >&2
     exit 1
 fi
 
