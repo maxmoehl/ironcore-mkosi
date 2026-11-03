@@ -31,10 +31,30 @@ in it's plugin concept.
 **machinepoollet**: Upstream version extended with patches to IRI to support
 reporting back the prefix allocated for a given network interface.
 
+The profile also ships the Cloud Hypervisor provider and its machinepoollet
+path, but neither provider is enabled by default. Enable either
+`libvirt-provider.service`/`machinepoollet.path` or
+`cloud-hypervisor-provider.service`/`machinepoollet-cloud-hypervisor.path`
+from cloud-init after writing the corresponding configuration files.
+
+### Cloud Hypervisor units
+
+**chp-kvm**: Loads KVM and rbd kernel modules, validates `/dev/kvm`.
+
+**cloud-hypervisor-provider**: The IRI gRPC provider. Runs as root (required
+for `rbd map`). Uses the `inisix` network plugin by default. The machine class
+is read from `$CHP_MACHINE_CLASS` in `/etc/cloud-hypervisor-provider/provider.env`.
+
+**machinepoollet-cloud-hypervisor.path/.service**: Socket-triggered machinepoollet
+that starts once `/run/chp/iri-machinebroker.sock` appears. Bootstrap-rotates
+its kubeconfig and passes `--leader-election-kubeconfig` for the leader lock.
+
 ## Dependencies
 
 The profile requires the following files to be provided via a bootstrapping
 mechanism. Currently it assumes cloud-init and orders its units accordingly:
+
+### libvirt-provider
 
 * `/var/lib/libvirt-provider/supported-machine-classes.yaml`: the list of
   supported machine classes to be announced by the `libvirt-provider`.
@@ -43,5 +63,19 @@ mechanism. Currently it assumes cloud-init and orders its units accordingly:
   should create its machine pool.
 * `/var/lib/machinepoollet/env`: environment file for `machinepoollet` which can
   be used to inject `TOPOLOGY_REGION` and `TOPOLOGY_ZONE`.
+
+### cloud-hypervisor-provider
+
+* `/etc/cloud-hypervisor-provider/provider.env`: must set `CHP_MACHINE_CLASS`
+  (format: `name,cpu,memory_bytes`).
+* `/etc/cloud-hypervisor-provider/machinepoollet.env`: must set
+  `MACHINE_POOL_NAME`, `PROVIDER_ID`, `MACHINEPOOLLET_ADDRESS`, and optionally
+  `MACHINEPOOLLET_IP`.
+* `/etc/cloud-hypervisor-provider/bootstrap-kubeconfig`: bootstrap kubeconfig
+  for machinepoollet certificate rotation.
+
+### shared (both providers)
+
 * `/var/lib/inisix/init.env`: store parameters for `init-inisix.service`
-  (asserted to exist, read via `EnvironmentFile=`).
+  (asserted to exist, read via `EnvironmentFile=`). Must set `BASE_PREFIX`
+  and `PREFIX_SIZE`. The prefix is typically provided by the metaldata service.
