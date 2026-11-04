@@ -1,0 +1,26 @@
+#!/bin/sh
+set -eu
+
+export GOTOOLCHAIN=auto
+export GOPATH="$BUILDDIR/go/path"
+export GOCACHE="$BUILDDIR/go/buildcache"
+export GOMODCACHE="$BUILDDIR/go/modcache"
+export CGO_ENABLED=0
+
+if [ ! -f "$SRCDIR/src/ironcore/go.mod" ]; then
+    echo "error: src/ironcore is not checked out, run:" >&2
+    echo "    git submodule update --init src/ironcore" >&2
+    exit 1
+fi
+
+mkdir -p "$DESTDIR/usr/local/bin"
+
+cd "$SRCDIR/src/ironcore"
+
+go build -trimpath \
+    -o "$DESTDIR/usr/local/bin/machinepoollet" \
+    ./poollet/machinepoollet/cmd/machinepoollet
+
+go build -trimpath \
+    -o "$DESTDIR/usr/local/bin/irictl-machine" \
+    ./irictl-machine/cmd/irictl-machine

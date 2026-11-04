@@ -2,24 +2,22 @@
 Description=IronCore libvirt-provider
 Documentation=https://github.com/ironcore-dev/libvirt-provider
 Wants=cloud-init.target
-After=cloud-init.target inisixd.service
+After=cloud-init.target
 AssertPathExists=/var/lib/libvirt-provider/supported-machine-classes.yaml
 
 [Service]
 User=libvirt-provider
 Group=libvirt-provider
 SupplementaryGroups=libvirt
-AmbientCapabilities=CAP_NET_ADMIN
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_NET_RAW
 RuntimeDirectory=libvirt-provider
-Environment=INISIX_MODE=tap
 ExecStart=/usr/local/bin/libvirt-provider \
     --address=/var/run/libvirt-provider/libvirt-provider.sock \
     --libvirt-provider-dir=/var/lib/libvirt-provider \
     --libvirt-socket=/var/run/libvirt/libvirt-sock \
     --libvirt-uri=qemu:///system \
     --supported-machine-classes=/var/lib/libvirt-provider/supported-machine-classes.yaml \
-    --network-interface-plugin-name=ini \
-    --ini-plugin-path=/usr/local/bin/inisix \
+    --network-interface-plugin-name=inisix \
     --gc-resync-interval=5s \
     --gc-vm-graceful-shutdown-timeout=0 \
     --enable-hugepages=true \

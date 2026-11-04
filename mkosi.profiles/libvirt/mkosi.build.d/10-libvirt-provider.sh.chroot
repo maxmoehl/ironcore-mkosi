@@ -1,0 +1,22 @@
+#!/bin/sh
+set -eu
+
+export GOTOOLCHAIN=auto
+export GOPATH="$BUILDDIR/go/path"
+export GOCACHE="$BUILDDIR/go/buildcache"
+export GOMODCACHE="$BUILDDIR/go/modcache"
+export CGO_ENABLED=0
+
+if [ ! -f "$SRCDIR/src/libvirt-provider/go.mod" ]; then
+    echo "error: src/libvirt-provider is not checked out, run:" >&2
+    echo "    git submodule update --init src/libvirt-provider" >&2
+    exit 1
+fi
+
+mkdir -p "$DESTDIR/usr/local/bin"
+
+cd "$SRCDIR/src/libvirt-provider"
+
+go build -trimpath \
+    -o "$DESTDIR/usr/local/bin/libvirt-provider" \
+    ./cmd/libvirt-provider
