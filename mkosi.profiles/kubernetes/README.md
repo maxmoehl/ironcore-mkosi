@@ -38,7 +38,7 @@ bin/build kubernetes
   on all containers, because `:latest` would default to `Always` (every pod
   start would then contact GHCR and inherit whatever `latest` happens to be).
 * The **FeCNI plugin binary** itself, built from `src/FeCNI` at image-build
-  time (`mkosi.build.d/10-fecni.sh.chroot`, same pattern as the libvirt
+  time (`mkosi.build.d/10-fecni.sh.chroot`, same pattern as the hypervisor
   profile) and shipped in the standard CNI directory `/opt/cni/bin/fecni`.
   Requires the `src/FeCNI` submodule at build time (`git submodule update
   --init src/FeCNI`). The DaemonSet's `install-cni` init container still

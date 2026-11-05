@@ -11,11 +11,11 @@
         "architectures": ["amd64", "arm64"],
         "profiles": ["default-user"]
     },
-    "libvirt": {
+    "hypervisor": {
         "distros": ["debian"],
         "platform": "metal",
         "architectures": ["amd64"],
-        "profiles": ["disk-install", "cloud-init", "frr", "libvirt"]
+        "profiles": ["disk-install", "cloud-init", "frr", "hypervisor"]
     },
     "factorio": {
         "distros": ["debian"],

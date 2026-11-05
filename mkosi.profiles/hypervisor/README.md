@@ -1,4 +1,4 @@
-# libvirt
+# hypervisor
 
 Packaging an IronCore libvirt hypervisor by shipping
 [libvirt-provider](https://github.com/ironcore-dev/libvirt-provider) and the
