@@ -2,7 +2,7 @@
 #
 # bin/dev - build & boot image via mkosi for local testing.
 #
-# Usage: bin/dev [CMD] [PROFILE]
+# Usage: bin/dev PROFILE [ARGS...]
 #
 # Commands:
 #
@@ -21,20 +21,8 @@
 
 set -eu
 
-case "${1:-}" in
-    build)
-        exec mkosi --image-id dev --force --profile "${2:?usage: bin/dev build PROFILE}" build ;;
-    vm)
-        exec mkosi --image-id dev vm ;;
-    ssh)
-        exec mkosi --image-id dev ssh ;;
-    "")
-        echo "bin/dev: empty command, assuming 'ssh'" >&2
-        exec bin/dev ssh
-        ;;
-    *)
-        echo "bin/dev: unknown command '${1}' assuming profile name" >&2
-        bin/dev build "${1}"
-        exec bin/dev vm
-        ;;
-esac
+profile="${1:?usage: bin/dev PROFILE}"
+shift
+
+mkosi --force --profile "$profile" --image-id dev "$@" build
+exec mkosi --image-id dev --ephemeral vm
