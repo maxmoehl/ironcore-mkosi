@@ -39,3 +39,21 @@ documentation for details.
 | `kubernetes`   | kubeadm-ready node image (IPv6, FeCNI), no metadata service needed. |
 
 See the readme of each profile for more details.
+
+## Hacking
+
+To run a local version of any combination of profiles the `bin/dev` script can
+be used. `PROFILE` should be a comma separated list of profile names and any
+additional arguments will be passed to the mkosi build command as-is.
+
+```
+usage: bin/dev PROFILE [ARGS...]
+```
+
+The script will build the image using `dev` as the image ID and boot a VM from
+it. The VM is booted with the ephemeral flag to ensure the disk image does not
+get modified and subsequent boots start fresh.
+
+To override configuration locally `mkosi.local.conf` can be created. Beware that
+this file will be included in any build, including those that can be pushed
+using `bin/build`.

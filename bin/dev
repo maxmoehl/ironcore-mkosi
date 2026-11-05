@@ -1,27 +1,10 @@
 #!/bin/sh
 #
-# bin/dev - build & boot image via mkosi for local testing.
-#
-# Usage: bin/dev PROFILE [ARGS...]
-#
-# Commands:
-#
-# build PROFILE
-#   Build the given profile with the dev image-id, PROFILE is passed as-is to
-#   the mkosi --profile flag.
-#
-# vm
-#   Launch the dev VM, image must have been built first.
-#
-# ssh
-#   Connect to the VM, VM must have been launched first.
-#
-# An empty command is assumed to be 'ssh', providing a profile list without
-# a command will build that image and launch it in a VM.
+# usage: bin/dev PROFILE [ARGS...]
 
 set -eu
 
-profile="${1:?usage: bin/dev PROFILE}"
+profile="${1:?usage: bin/dev PROFILE [ARGS...]}"
 shift
 
 mkosi --force --profile "$profile" --image-id dev "$@" build
