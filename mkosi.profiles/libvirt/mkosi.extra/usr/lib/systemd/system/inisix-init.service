@@ -1,16 +1,17 @@
 [Unit]
 Description=Initialize the inisix prefix store
-ConditionPathExists=!/var/lib/inisix/prefixes.json
+ConditionPathExists=!/var/lib/libvirt-provider/inisix-prefixes.json
 Wants=cloud-init.target
 After=cloud-init.target
-Before=libvirt-provider.service machinepoollet.service
+Before=libvirt-provider.service
 
 [Service]
 Type=oneshot
 TimeoutStartSec=5min
 User=libvirt-provider
 Group=libvirt-provider
-ExecStart=/usr/local/bin/inisix-init.sh
+Environment=INISIX_PREFIX_STORE=/var/lib/libvirt-provider/inisix-prefixes.json
+ExecStart=/usr/local/bin/inisix-init.pl
 
 [Install]
 WantedBy=hypervisor.target

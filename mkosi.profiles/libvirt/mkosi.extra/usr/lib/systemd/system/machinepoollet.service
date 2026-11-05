@@ -6,13 +6,15 @@ AssertPathExists=/var/lib/machinepoollet/bootstrap-kubeconfig
 AssertPathExists=/var/lib/machinepoollet/env
 
 [Service]
+User=machinepoollet
+Group=machinepoollet
 EnvironmentFile=/var/lib/machinepoollet/env
 ExecStart=/usr/local/bin/machinepoollet \
     --health-probe-bind-address=[::1]:8081 \
     --metrics-bind-address=[::1]:8080 \
     --machine-pool-name=%H \
     --provider-id=libvirt-provider://%H \
-    --machine-runtime-endpoint=unix:/var/run/libvirt-provider/libvirt-provider.sock \
+    --machine-runtime-endpoint=/run/ironcore/machine.sock \
     --kubeconfig=/var/lib/machinepoollet/kubeconfig \
     --bootstrap-kubeconfig=/var/lib/machinepoollet/bootstrap-kubeconfig \
     --rotate-certificates \
@@ -27,5 +29,4 @@ ExecStart=/usr/local/bin/machinepoollet \
 Restart=on-failure
 
 # No [Install] section on purpose: machinepoollet.service is activated by
-# machinepoollet.path once the libvirt-provider socket exists, not pulled
-# in by the default target directly.
+# machinepoollet.path once a provider listens on the socket.

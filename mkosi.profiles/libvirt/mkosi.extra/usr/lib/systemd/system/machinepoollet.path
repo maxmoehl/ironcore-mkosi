@@ -1,8 +1,8 @@
 [Unit]
-Description=Wait for the libvirt-provider socket before starting machinepoollet
+Description=Wait for IRI machine socket to be ready.
 
 [Path]
-PathExists=/var/run/libvirt-provider/libvirt-provider.sock
+PathExists=/run/ironcore/machine.sock
 Unit=machinepoollet.service
 
 [Install]

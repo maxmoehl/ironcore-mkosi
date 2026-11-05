@@ -5,8 +5,9 @@ Packaging an IronCore libvirt hypervisor by shipping
 [machinepoollet](https://github.com/ironcore-dev/ironcore/tree/main/poollet/machinepoollet).
 
 In addition to the standard IronCore stack, this image ships an expiremental
-network implementation: [inisix](http://git.moehl.eu/ironcore/inisix.git). It is
-based on tun/tap devices and regular kernel networking.
+network implementation as part of libvirt-provider:
+[inisix](http://git.moehl.eu/ironcore/inisix.git). It is based on tun/tap
+devices and regular kernel networking.
 
 ## Unit Ordering
 
@@ -18,18 +19,16 @@ necessary config lands before anything starts.
 
 The following units are added by this profile (in start-order):
 
-**init-inisix**: Initializes the inisix prefix store with a one-shot
-`inisix init prefix $BASE_PREFIX $PREFIX_SIZE`, reading both variables from
-`/var/lib/inisix/init.env`. Skipped once a store exists: `inisix init` truncates
-the store, re-init would wipe the allocation state of running VMs.
+**inisix-init**: Initializes the inisix prefix store with a one-shot
+`inisix init prefix $BASE_PREFIX $PREFIX_SIZE`. It is implemented as a script
+which waits for FRR to assign the loopback address to calculate the host prefix
+from it and initialize the store.
 
-**inisixd**: The DHCPv6 server listening on all links managed by `inisix`.
+**libvirt-provider**: Upstream verison with patches to add support for the
+inisix network interface plugin.
 
-**libvirt-provider**: Upstream verison with patches to support the INI interface
-in it's plugin concept.
-
-**machinepoollet**: Upstream version extended with patches to IRI to support
-reporting back the prefix allocated for a given network interface.
+**machinepoollet**: Upstream version. Is started once libvirt-provider starts
+listening on the unix domain socket.
 
 ## Dependencies
 
@@ -43,5 +42,3 @@ mechanism. Currently it assumes cloud-init and orders its units accordingly:
   should create its machine pool.
 * `/var/lib/machinepoollet/env`: environment file for `machinepoollet` which can
   be used to inject `TOPOLOGY_REGION` and `TOPOLOGY_ZONE`.
-* `/var/lib/inisix/init.env`: store parameters for `init-inisix.service`
-  (asserted to exist, read via `EnvironmentFile=`).
