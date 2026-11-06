@@ -8,8 +8,6 @@ use JSON::PP;
 use List::Util qw(any);
 use POSIX qw(strftime);
 
-my $repo = "ghcr.io/maxmoehl";
-
 my %platform_config = (
     "metal" => { layer => "uki",    ext => "efi" },
     "virt"  => { layer => "rootfs", ext => "raw" },
@@ -21,16 +19,18 @@ my %mkosi_arch = (
 );
 
 sub usage {
-    die("usage: bin/build [ -a ARCHITECTURE ] [ -d DISTRO ] [ -p ] FLAVOR [ -- MKOSI_ARGS... ]\n");
+    die("usage: bin/build [ -a ARCHITECTURE ] [ -d DISTRO ] [ -r REGISTRY ] [ -p ] FLAVOR [ -- MKOSI_ARGS... ]\n");
 }
 
 my $architecture = "";
 my $distro       = "";
 my $push         = 0;
+my $registry     = "ghcr.io/maxmoehl";
 GetOptions(
     "architecture|a=s" => \$architecture,
     "distro|d=s"       => \$distro,
     "push|p"          => \$push,
+    "registry|r=s"        => \$registry,
 ) or usage();
 
 if (scalar(@ARGV) < 1) {
@@ -114,12 +114,12 @@ for my $dist (@distros) {
         push(@configs, "--config", "arch=${arch},${layer}=mkosi.output/${filename}_${mkosi_arch{$arch}}.${ext}");
     }
 
-    system("ironcore-image", "build", "--tag", "${repo}/${dist}:${tag}-${date}", @configs) == 0
+    system("ironcore-image", "build", "--tag", "${registry}/${dist}:${tag}-${date}", @configs) == 0
         or die("bin/build: ironcore-image build failed\n");
 
-    system("ironcore-image", "push", "--push-sub-manifests", "${repo}/${dist}:${tag}-${date}") == 0
+    system("ironcore-image", "push", "--push-sub-manifests", "${registry}/${dist}:${tag}-${date}") == 0
         or die("bin/build: ironcore-image push failed\n");
 
-    system("oras", "tag", "${repo}/${dist}:${tag}-${date}", $tag) == 0
+    system("oras", "tag", "${registry}/${dist}:${tag}-${date}", $tag) == 0
         or die("bin/build: oras tag failed\n");
 }
