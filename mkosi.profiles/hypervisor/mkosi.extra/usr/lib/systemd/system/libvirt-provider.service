@@ -23,7 +23,6 @@ ExecStart=/usr/local/bin/libvirt-provider \
     --inisix-dns-server=2001:4860:4860::64 \
     --gc-resync-interval=5s \
     --gc-vm-graceful-shutdown-timeout=0 \
-    --enable-hugepages=true \
     --volume-cache-policy=writeback \
     --zap-log-level=3
 Restart=on-failure
