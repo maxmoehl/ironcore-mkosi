@@ -1,7 +1,8 @@
 [Unit]
-Description=IronCore machinepoollet
+Description=IronCore machinepoollet for %i
 Wants=cloud-init.target
-After=cloud-init.target libvirt-provider.service
+After=cloud-init.target %i.service
+BindsTo=%i.service
 AssertPathExists=/var/lib/machinepoollet/bootstrap-kubeconfig
 AssertPathExists=/var/lib/machinepoollet/env
 
@@ -13,8 +14,8 @@ ExecStart=/usr/local/bin/machinepoollet \
     --health-probe-bind-address=[::1]:8081 \
     --metrics-bind-address=[::1]:8080 \
     --machine-pool-name=%H \
-    --provider-id=libvirt-provider://%H \
-    --machine-runtime-endpoint=/run/ironcore/machine.sock \
+    --provider-id=%i://%H \
+    --machine-runtime-endpoint=unix:///run/ironcore/%i.sock \
     --kubeconfig=/var/lib/machinepoollet/kubeconfig \
     --bootstrap-kubeconfig=/var/lib/machinepoollet/bootstrap-kubeconfig \
     --rotate-certificates \
@@ -28,5 +29,7 @@ ExecStart=/usr/local/bin/machinepoollet \
     --nic-downward-api-label=root-nic-uid="metadata.labels['downward-api.machinepoollet.ironcore.dev/root-nic-uid']"
 Restart=on-failure
 
-# No [Install] section on purpose: machinepoollet.service is activated by
-# machinepoollet.path once a provider listens on the socket.
+# No [Install] section on purpose: machinepoollet@<provider>.service is
+# activated by machinepoollet@<provider>.path once the provider listens on its
+# socket. The instance name is the provider unit name and doubles as the
+# provider ID scheme.

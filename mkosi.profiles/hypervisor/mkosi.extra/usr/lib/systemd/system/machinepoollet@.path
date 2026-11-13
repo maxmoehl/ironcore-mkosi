@@ -1,0 +1,7 @@
+[Unit]
+Description=Wait for the IRI machine socket of %i to be ready.
+PartOf=%i.service
+
+[Path]
+PathExists=/run/ironcore/%i.sock
+Unit=machinepoollet@%i.service

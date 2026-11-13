@@ -27,8 +27,11 @@ from it and initialize the store.
 **libvirt-provider**: Upstream verison with patches to add support for the
 inisix network interface plugin.
 
-**machinepoollet**: Upstream version. Is started once libvirt-provider starts
-listening on the unix domain socket.
+**machinepoollet@**: Upstream version, shipped as a template unit. The instance
+name is the provider unit name and is used for the `--provider-id=%i://%H`
+scheme as well as the runtime socket `/run/ironcore/%i.sock`. The provider
+listens on its own socket and pulls in `machinepoollet@%N.path`, which starts
+the poollet once the socket exists.
 
 ## Dependencies
 

@@ -1,9 +1,0 @@
-[Unit]
-Description=Wait for IRI machine socket to be ready.
-
-[Path]
-PathExists=/run/ironcore/machine.sock
-Unit=machinepoollet.service
-
-[Install]
-WantedBy=hypervisor.target

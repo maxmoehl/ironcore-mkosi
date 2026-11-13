@@ -1,7 +1,7 @@
 [Unit]
 Description=IronCore libvirt-provider
 Documentation=https://github.com/ironcore-dev/libvirt-provider
-Wants=cloud-init.target
+Wants=cloud-init.target machinepoollet@%N.path
 After=cloud-init.target
 AssertPathExists=/var/lib/libvirt-provider/supported-machine-classes.yaml
 
@@ -12,13 +12,15 @@ UMask=0007
 SupplementaryGroups=libvirt
 AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_NET_RAW
 ExecStart=/usr/local/bin/libvirt-provider \
-    --address=/run/ironcore/machine.sock \
+    --address=/run/ironcore/%N.sock \
     --libvirt-provider-dir=/var/lib/libvirt-provider \
     --libvirt-socket=/run/libvirt/libvirt-sock \
     --libvirt-uri=qemu:///system \
     --supported-machine-classes=/var/lib/libvirt-provider/supported-machine-classes.yaml \
     --network-interface-plugin-name=inisix \
     --inisix-store-path=/var/lib/libvirt-provider/inisix-prefixes.json \
+    --inisix-dns-server=2001:4860:4860::6464 \
+    --inisix-dns-server=2001:4860:4860::64 \
     --gc-resync-interval=5s \
     --gc-vm-graceful-shutdown-timeout=0 \
     --enable-hugepages=true \
