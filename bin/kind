@@ -1,0 +1,62 @@
+#!/bin/sh
+# Create or delete the local kind cluster and install IronCore into it.
+# Must be invoked from the repo root: bin/kind [ up | down ]
+#
+# Uses a dedicated kubeconfig (.kubeconfig, gitignored) so that ~/.kube/config
+# and $KUBECONFIG are never read or modified. Use it with:
+#   export KUBECONFIG=$PWD/.kubeconfig
+set -eu
+
+log() { echo "bin/kind: $*" >&2; }
+die() { log "$@"; exit 1; }
+
+for cmd in kind kubectl; do
+	if ! command -v "$cmd" >/dev/null; then
+		die "$cmd not found in PATH" >&2
+	fi
+done
+
+CLUSTER=ironcore
+KUBECONFIG="$PWD/.kubeconfig"
+KIND_EXPERIMENTAL_PROVIDER=podman
+export KUBECONFIG KIND_EXPERIMENTAL_PROVIDER
+
+case "${1:-}" in
+up)
+	if ! kind get clusters 2>/dev/null | grep -Eq '^'"$CLUSTER"'$'; then
+		log "creating kind cluster"
+		kind create cluster --name "$CLUSTER" --config kind/cluster.yaml
+		# kind has ... opinions on IPv6 which I don't agree with. Ultimately we
+		# want the node address (which is the container IP) to which we can talk
+		# directly without any port mappings.
+		kube_ip6="$(podman container inspect ironcore-control-plane \
+			| jq -r '.[0].NetworkSettings.Networks.kind.GlobalIPv6Address')"
+		env SERVER="https://[${kube_ip6}]:6443" \
+			yq -i '.clusters[0].cluster.server = strenv(SERVER)' "$KUBECONFIG"
+		log "created kind cluster"
+	fi
+
+	log "applying manifests to cluster"
+	kubectl apply -k kind/cert-manager
+	kubectl wait --namespace cert-manager --for=condition=Available \
+		deployment --all --timeout=300s
+	kubectl apply -k kind/ironcore
+	kubectl wait --namespace ironcore-system --for=condition=Available \
+		deployment --all --timeout=300s
+	kubectl apply -k kind/
+	log "applied manifests to cluster, interact with:"
+	log "  KUBECONFIG=.kubeconfig kubectl [...]"
+	;;
+down)
+	if kind get clusters 2>/dev/null | grep -Eq '^'"$CLUSTER"'$'; then
+		log "deleting kind cluster"
+		kind delete cluster --name "$CLUSTER"
+		rm -f "$KUBECONFIG"
+		log "deleted kind cluster"
+	fi
+	;;
+*)
+	echo "usage: bin/kind [ up | down ]" >&2
+	exit 1
+	;;
+esac

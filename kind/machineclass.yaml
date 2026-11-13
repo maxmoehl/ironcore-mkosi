@@ -1,0 +1,7 @@
+apiVersion: compute.ironcore.dev/v1alpha1
+kind: MachineClass
+metadata:
+  name: 1cpu-4gb
+capabilities:
+  cpu: 1
+  memory: 4Gi

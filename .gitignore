@@ -5,4 +5,6 @@ __pycache__
 /mkosi.key
 /mkosi.crt
 /mkosi.local.conf
-/cloud-init
+/cloud-init/*
+!/cloud-init/kind
+/.kubeconfig

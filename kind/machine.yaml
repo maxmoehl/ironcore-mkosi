@@ -1,0 +1,28 @@
+apiVersion: networking.ironcore.dev/v1alpha1
+kind: Network
+metadata:
+  name: network
+---
+apiVersion: compute.ironcore.dev/v1alpha1
+kind: Machine
+metadata:
+  name: machine01
+spec:
+  machineClassRef:
+    name: 1cpu-4gb
+  networkInterfaces:
+    - name: eth0
+      ephemeral:
+        networkInterfaceTemplate:
+          spec:
+            networkRef:
+              name: network
+            ipFamilies:
+              - IPv6
+            ips:
+              - value: fd00::1
+  volumes:
+    - name: root
+      localDisk:
+        image: ghcr.io/maxmoehl/debian:trixie-virt
+        sizeLimit: 32G

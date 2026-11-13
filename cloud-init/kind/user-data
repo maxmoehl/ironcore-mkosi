@@ -1,0 +1,31 @@
+#cloud-config
+write_files:
+  - path: /var/lib/machinepoollet/bootstrap-kubeconfig
+    permissions: '0600'
+    owner: machinepoollet:machinepoollet
+    content: |
+      # TODO: bootstrap config for the machinepoollet
+
+  - path: /var/lib/libvirt-provider/supported-machine-classes.yaml
+    permissions: '0644'
+    owner: root:root
+    content: |
+      - apiVersion: compute.ironcore.dev/v1alpha1
+        kind: MachineClass
+        metadata:
+          name: 1cpu-4gb
+        capabilities:
+          cpu: 1
+          memory: 4Gi
+
+  - path: /var/lib/machinepoollet/env
+    permissions: '0644'
+    owner: root:root
+    content: |
+      TOPOLOGY_REGION=dev
+      TOPOLOGY_ZONE=dev-a
+
+runcmd:
+- ip address add fdfe:c02e:3534:1::1/64 dev lo
+- systemctl daemon-reload
+- systemctl enable --now --no-block libvirt-provider
