@@ -1,0 +1,4 @@
+# The providers are mutually exclusive: ship them disabled and let the
+# bootstrapping mechanism (cloud-init) enable the one to use.
+disable libvirt-provider.service
+disable cloud-hypervisor-provider.service

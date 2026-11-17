@@ -17,6 +17,13 @@ write_files:
         capabilities:
           cpu: 1
           memory: 4Gi
+      - apiVersion: compute.ironcore.dev/v1alpha1
+        kind: MachineClass
+        metadata:
+          name: 2cpu-4gb
+        capabilities:
+          cpu: 2
+          memory: 4Gi
 
   - path: /var/lib/machinepoollet/env
     permissions: '0644'

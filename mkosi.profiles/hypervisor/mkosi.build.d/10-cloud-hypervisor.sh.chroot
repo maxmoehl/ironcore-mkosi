@@ -1,0 +1,31 @@
+#!/bin/sh
+set -eu
+
+# Upstream release, see https://github.com/cloud-hypervisor/cloud-hypervisor/releases
+# Note: not built with the fw_cfg feature.
+VERSION=v54.0
+
+case "$ARCHITECTURE" in
+x86-64)
+    ASSET=cloud-hypervisor-static
+    SHA256=4f4f98a3d661a40f3e5272627cc895a1b2e525f2f6bedf5f895f9cd21ba5c65b
+    ;;
+arm64)
+    ASSET=cloud-hypervisor-static-aarch64
+    SHA256=e8a6d9786ea678e739f1a386682846e93742dcb9c7b6e3e0c62e3bda6cff0ef3
+    ;;
+*)
+    echo "error: unsupported architecture: $ARCHITECTURE" >&2
+    exit 1
+    ;;
+esac
+
+mkdir -p "$DESTDIR/usr/local/bin"
+
+curl -fsSL \
+    -o "$DESTDIR/usr/local/bin/cloud-hypervisor" \
+    "https://github.com/cloud-hypervisor/cloud-hypervisor/releases/download/$VERSION/$ASSET"
+
+echo "$SHA256  $DESTDIR/usr/local/bin/cloud-hypervisor" | sha256sum -c -
+
+chmod 0755 "$DESTDIR/usr/local/bin/cloud-hypervisor"

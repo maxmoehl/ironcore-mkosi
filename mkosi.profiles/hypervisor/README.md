@@ -1,8 +1,9 @@
 # hypervisor
 
-Packaging an IronCore libvirt hypervisor by shipping
-[libvirt-provider](https://github.com/ironcore-dev/libvirt-provider) and the
-[machinepoollet](https://github.com/ironcore-dev/ironcore/tree/main/poollet/machinepoollet).
+Packaging an IronCore libvirt or cloud-hypervisor hypervisor by shipping
+[libvirt-provider](https://github.com/ironcore-dev/libvirt-provider),
+[cloud-hypervisor-provider](https://github.com/ironcore-dev/cloud-hypervisor-provider),
+and the [machinepoollet](https://github.com/ironcore-dev/ironcore/tree/main/poollet/machinepoollet).
 
 In addition to the standard IronCore stack, this image ships an expiremental
 network implementation as part of libvirt-provider:
@@ -27,11 +28,30 @@ from it and initialize the store.
 **libvirt-provider**: Upstream verison with patches to add support for the
 inisix network interface plugin.
 
+**cloud-hypervisor-provider**: Upstream verison.
+
 **machinepoollet@**: Upstream version, shipped as a template unit. The instance
 name is the provider unit name and is used for the `--provider-id=%i://%H`
 scheme as well as the runtime socket `/run/ironcore/%i.sock`. The provider
 listens on its own socket and pulls in `machinepoollet@%N.path`, which starts
 the poollet once the socket exists.
+
+Both providers ship disabled (`/usr/lib/systemd/system-preset/50-hypervisor.preset`).
+Enable the one to use from cloud-init, e.g.:
+
+```yaml
+runcmd:
+- systemctl enable --now --no-block libvirt-provider.service
+  # or:
+- systemctl enable --now --no-block cloud-hypervisor-provider.service
+```
+
+`enable` links the unit into `hypervisor.target.wants/`, so it is part of the
+boot transaction on all subsequent boots. `--no-block` is required: the
+providers are ordered `After=cloud-init.target`, which waits for
+`cloud-final.service` (the unit running `runcmd`), so a blocking start
+deadlocks. The queued start job still honors that ordering and only runs once
+`cloud-init.target` is reached.
 
 ## Dependencies
 

@@ -9,7 +9,7 @@ metadata:
   name: machine01
 spec:
   machineClassRef:
-    name: 1cpu-4gb
+    name: 2cpu-4gb
   networkInterfaces:
     - name: eth0
       ephemeral:

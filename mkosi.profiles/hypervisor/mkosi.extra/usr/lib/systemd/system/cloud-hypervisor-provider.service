@@ -1,0 +1,29 @@
+[Unit]
+Description=IronCore cloud-hypervisor-provider
+Documentation=https://github.com/ironcore-dev/cloud-hypervisor-provider
+Wants=modprobe@rbd.service cloud-init.target machinepoollet@%N.path
+After=modprobe@rbd.service cloud-init.target
+AssertPath=/dev/kvm
+
+[Service]
+Group=ironcore
+UMask=0007
+Environment=DOCKER_CONFIG=/var/lib/cloud-hypervisor-provider/docker
+ExecStart=/usr/local/bin/cloud-hypervisor-provider \
+    --address=/run/ironcore/%N.sock \
+    --provider-root-dir=/var/lib/cloud-hypervisor-provider \
+    --provider-machine-store-dir=/var/lib/cloud-hypervisor-provider/store \
+    --machine-class=1cpu-4gb,1,4294967296 \
+    --machine-class=2cpu-4gb,2,4294967296 \
+    --cloud-hypervisor-firmware-path=/usr/local/share/cloud-hypervisor/CLOUDHV.fd \
+    --cloud-hypervisor-bin-path=/usr/local/bin/cloud-hypervisor \
+    --network-interface-plugin-name=inisix \
+    --inisix-prefix-store=/var/lib/ironcore/inisix-prefixes.json \
+    --inisix-dns-server=2001:4860:4860::6464 \
+    --inisix-dns-server=2001:4860:4860::64 \
+    --zap-log-level=3
+KillMode=process
+Restart=on-failure
+
+[Install]
+WantedBy=hypervisor.target

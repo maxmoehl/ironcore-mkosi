@@ -1,0 +1,32 @@
+#!/bin/sh
+set -eu
+
+# Cloud Hypervisor's EDK II firmware, see
+# https://github.com/cloud-hypervisor/edk2/releases
+RELEASE=ch-97eeb7b09
+
+case "$ARCHITECTURE" in
+x86-64)
+    ASSET=CLOUDHV.fd
+    SHA256=dc2fc8f0e43b96712d9fccc52a3a590769606412b3e1bc911d217addd3bef624
+    ;;
+arm64)
+    ASSET=CLOUDHV_EFI.fd
+    SHA256=13cf4eddc44f3fac4e223b54bcf958de99539297fee8b61cca2605ab5b5009fb
+    ;;
+*)
+    echo "error: unsupported architecture: $ARCHITECTURE" >&2
+    exit 1
+    ;;
+esac
+
+mkdir -p "$DESTDIR/usr/local/share/cloud-hypervisor"
+
+# Same file name for all architectures so consumers can use a single path.
+curl -fsSL \
+    -o "$DESTDIR/usr/local/share/cloud-hypervisor/CLOUDHV.fd" \
+    "https://github.com/cloud-hypervisor/edk2/releases/download/$RELEASE/$ASSET"
+
+echo "$SHA256  $DESTDIR/usr/local/share/cloud-hypervisor/CLOUDHV.fd" | sha256sum -c -
+
+chmod 0644 "$DESTDIR/usr/local/share/cloud-hypervisor/CLOUDHV.fd"
