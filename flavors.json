@@ -17,18 +17,6 @@
         "architectures": ["amd64"],
         "profiles": ["disk-install", "cloud-init", "frr", "hypervisor"]
     },
-    "factorio": {
-        "distros": ["debian"],
-        "platform": "virt",
-        "architectures": ["amd64"],
-        "profiles": ["default-user", "factorio"]
-    },
-    "teamspeak": {
-        "distros": ["debian"],
-        "platform": "virt",
-        "architectures": ["amd64"],
-        "profiles": ["default-user", "teamspeak"]
-    },
     "kubernetes": {
         "distros": ["debian"],
         "platform": "virt",
