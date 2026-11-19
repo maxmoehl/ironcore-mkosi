@@ -1,18 +1,19 @@
 #!/bin/sh
 set -eu
 
-# Upstream release, see https://github.com/cloud-hypervisor/cloud-hypervisor/releases
-# Note: not built with the fw_cfg feature.
-VERSION=v54.0
+# cloud-hypervisor built with --features fw_cfg from ironcore-dev/cloud-hypervisor-provider,
+# see https://github.com/ironcore-dev/cloud-hypervisor-provider/releases/tag/cloud-hypervisor-fw_cfg
+REPO=ironcore-dev/cloud-hypervisor-provider
+TAG=cloud-hypervisor-fw_cfg
 
 case "$ARCHITECTURE" in
 x86-64)
     ASSET=cloud-hypervisor-static
-    SHA256=4f4f98a3d661a40f3e5272627cc895a1b2e525f2f6bedf5f895f9cd21ba5c65b
+    SHA256=9e32e15004fe8310597fe70569cc6d38644ce360fc824b9c690f2e2d0d32305b
     ;;
 arm64)
     ASSET=cloud-hypervisor-static-aarch64
-    SHA256=e8a6d9786ea678e739f1a386682846e93742dcb9c7b6e3e0c62e3bda6cff0ef3
+    SHA256=1afef60174976d19896a77b316e9d50c895de4bb5f42a907ac8df49a96d4dbcd
     ;;
 *)
     echo "error: unsupported architecture: $ARCHITECTURE" >&2
@@ -24,7 +25,7 @@ mkdir -p "$DESTDIR/usr/local/bin"
 
 curl -fsSL \
     -o "$DESTDIR/usr/local/bin/cloud-hypervisor" \
-    "https://github.com/cloud-hypervisor/cloud-hypervisor/releases/download/$VERSION/$ASSET"
+    "https://github.com/$REPO/releases/download/$TAG/$ASSET"
 
 echo "$SHA256  $DESTDIR/usr/local/bin/cloud-hypervisor" | sha256sum -c -
 
